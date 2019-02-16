@@ -14,13 +14,17 @@ fn main() {
 
     let mut server = ChatServer::new();
 
-    for stream in listener.incoming() {
-        let stream = stream.unwrap();
-        let client_addr = stream.peer_addr().unwrap();
-
-        println!("--> Connection established: {}", client_addr);
-
-        server.handle_connection(stream);
+    for incoming in listener.incoming() {
+        match incoming {
+            Ok(stream) => {
+                let client_addr = stream.peer_addr().unwrap();
+                println!("--> Connection established: {}", client_addr);
+                server.handle_connection(stream);
+            },
+            Err(_) => {
+                println!("--> Incoming connection was dropped.");
+            }
+        }
     }
 }
 
@@ -61,7 +65,9 @@ impl ChatServer {
     }
 
     fn handle_post_message(&mut self, connection : &mut Connection, data : HttpRequestContent) {
-        println!("    POST {}\n    Body: {}", data.location, data.body);
+        //println!("    POST {}\n    Body: {}", data.location, data.body);
+
+        println!("  > Received message: {}", data.body);
 
         self.messages.push(data.body);
 
