@@ -1,5 +1,6 @@
 mod http;
 
+use std::io;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -43,9 +44,16 @@ impl ChatServer {
     fn handle_connection(&mut self, stream : TcpStream) {
 
         let mut connection = Connection::new(stream);
+
+
         let request_str = connection.read_data();
         
-        let request = HttpParser::parse(&request_str);
+        if !request_str.is_ok() {
+            println!("Connection reset by peer.");
+            return;
+        }
+
+        let request = HttpParser::parse(&request_str.unwrap());
 
         match request {
             Err(msg) => {
@@ -66,7 +74,6 @@ impl ChatServer {
 
     fn handle_post_message(&mut self, connection : &mut Connection, data : HttpRequestContent) {
         //println!("    POST {}\n    Body: {}", data.location, data.body);
-
         println!("  > Received message: {}", data.body);
 
         self.messages.push(data.body);
@@ -87,13 +94,16 @@ impl Connection {
         }
     }
 
-    fn read_data(&mut self) -> String {
+    fn read_data(&mut self) -> Result<String, io::Error> {
         let mut buffer = [0; 512];
 
-        self.stream.read(&mut buffer).unwrap();
-
-        let data = String::from_utf8_lossy(&buffer[..]);
-        data.to_string()
+        match self.stream.read(&mut buffer) {
+            Ok(_) => {
+                let data = String::from_utf8_lossy(&buffer[..]);
+                Ok(data.to_string())
+            },
+            Err(e) => Err(e)
+        }
     }
 
     fn write_data(&mut self, data : &str) {
