@@ -7,7 +7,7 @@ impl HttpFormatter {
     pub fn ok_with_body(body : &str) -> String {
         let mut headers = HttpFormatter::format_headers("200 OK");
         headers.push_str(body);
-        println!("  > Writing response: {} chars.", headers.len());
+        println!("  > Formatted response: {} chars.", headers.len());
         headers
     }
 
@@ -19,6 +19,7 @@ impl HttpFormatter {
         let mut headers = String::from("HTTP/1.1 ");
         headers.push_str(status);
         headers.push_str("\r\n\r\n");
+        println!("  > Formatted response: {} chars.", headers.len());
         headers
     }
 }
