@@ -66,7 +66,6 @@ impl ChatServer {
             Ok(HttpRequest::GET(data)) => self.handle_get_messages(connection, data),
             Ok(HttpRequest::POST(data)) => self.handle_post_message(&mut connection, data),
         }
-        println!("  > Connection closed.");
     }
 
     fn handle_get_messages(&mut self, connection : Connection, data : HttpRequestContent) {
@@ -121,7 +120,16 @@ impl Connection {
     }
 
     fn write_data(&mut self, data : &str) {
-        self.stream.write(data.as_bytes()).unwrap();
-        self.stream.flush().unwrap();
+        match self.stream.write(data.as_bytes()) {
+            Ok(bytecount) => println!("--> Wrote {} bytes.", bytecount),
+            Err(_) => {
+                println!("--> Write failed: connection closed.");
+                return;
+            },
+        }
+        match self.stream.flush() {
+            Ok(_) => {},
+            Err(_) => println!("--> Flush failed: connection closed."), 
+        }
     }
 }
