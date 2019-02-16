@@ -2,7 +2,6 @@ use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::result::Result;
-use regex::Regex;
 use regex::Captures;
 use regex::RegexBuilder;
 
@@ -31,12 +30,12 @@ fn handle_connection(stream : TcpStream) {
             println!("  ! Error: {}", msg);
         },
         Ok(HttpRequest::GET(data)) => {
-            println!("GET {}: \n{}\n{}", data.location, data.headers, data.body);
+            println!("    GET {}\n    Body: {}", data.location, data.body);
             let response = HttpFormatter::ok("GET ACCEPTED");
             connection.write_data(&response);
         },
         Ok(HttpRequest::POST(data)) => {
-            println!("  {}: \n{}\n{}", data.location, data.headers, data.body);
+            println!("    POST {}\n    Body: {}", data.location, data.body);
             let response = HttpFormatter::ok("POST ACCEPTED");
             connection.write_data(&response);
         },
