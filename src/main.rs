@@ -68,7 +68,7 @@ impl ChatServer {
         }
     }
 
-    fn handle_get_messages(&mut self, connection : Connection, data : HttpRequestContent) {
+    fn handle_get_messages(&mut self, connection : Connection, _data : HttpRequestContent) {
         //println!("    GET {}\n    Body: {}", data.location, data.body);
         self.waiting_connections.push(connection);
     }
