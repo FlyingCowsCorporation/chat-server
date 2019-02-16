@@ -1,0 +1,8 @@
+[package]
+name = "rust-practice"
+version = "0.1.0"
+authors = ["Johan Geluk <johan@vicompany.nl>"]
+edition = "2018"
+
+[dependencies]
+regex = "*"
