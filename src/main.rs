@@ -88,7 +88,7 @@ impl ChatServer {
 
     fn handle_post_message(&mut self, connection : &mut Connection, data : HttpRequestContent) {
         //println!("    POST {}\n    Body: {}", data.location, data.body);
-        println!("  > Received message: {}", data.body);
+        println!("  > Received message: \"{}\"", data.body);
 
         let response = HttpFormatter::ok();
         connection.write_data(&response);
