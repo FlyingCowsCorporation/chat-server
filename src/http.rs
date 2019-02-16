@@ -6,8 +6,8 @@ pub struct HttpFormatter { }
 impl HttpFormatter {
     pub fn ok_with_body(body : &str) -> String {
         let mut headers = HttpFormatter::format_headers("200 OK");
-        println!("  > Writing body: {} chars.", headers.len());
         headers.push_str(body);
+        println!("  > Writing response: {} chars.", headers.len());
         headers
     }
 
