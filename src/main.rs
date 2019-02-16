@@ -9,9 +9,10 @@ use http::HttpParser;
 use http::HttpRequest;
 use http::HttpRequestContent;
 
-
 fn main() {
     let listener = TcpListener::bind("0.0.0.0:15000").unwrap();
+
+    let mut server = ChatServer::new();
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
@@ -19,39 +20,54 @@ fn main() {
 
         println!("--> Connection established: {}", client_addr);
 
-        handle_connection(stream);
+        server.handle_connection(stream);
     }
 }
 
-fn handle_connection(stream : TcpStream) {
+struct ChatServer {
+    messages : Vec<String>
+}
 
-    let mut connection = Connection::new(stream);
-    let request_str = connection.read_data();
-    
-    let request = HttpParser::parse(&request_str);
+impl ChatServer {
 
-    match request {
-        Err(msg) => {
-            println!("  ! Error: {}", msg);
-        },
-        Ok(HttpRequest::GET(data)) => handle_get_messages(&mut connection, data),
-        Ok(HttpRequest::POST(data)) => handle_post_message(&mut connection, data),
+    fn new() -> ChatServer {
+        ChatServer {
+            messages: Vec::new(),
+        } 
+     }
+
+    fn handle_connection(&mut self, stream : TcpStream) {
+
+        let mut connection = Connection::new(stream);
+        let request_str = connection.read_data();
+        
+        let request = HttpParser::parse(&request_str);
+
+        match request {
+            Err(msg) => {
+                println!("  ! Error: {}", msg);
+            },
+            Ok(HttpRequest::GET(data)) => self.handle_get_messages(&mut connection, data),
+            Ok(HttpRequest::POST(data)) => self.handle_post_message(&mut connection, data),
+        }
+        println!("  > Connection closed.");
     }
-    println!("  > Connection closed.");
-}
 
-fn handle_get_messages(connection : &mut Connection, data : HttpRequestContent) {
-    println!("    GET {}\n    Body: {}", data.location, data.body);
+    fn handle_get_messages(&self, connection : &mut Connection, data : HttpRequestContent) {
+        println!("    GET {}\n    Body: {}", data.location, data.body);
 
-    let response = HttpFormatter::ok_with_body("Hello!");
-    connection.write_data(&response);
-}
+        let response = HttpFormatter::ok_with_body("Hello!");
+        connection.write_data(&response);
+    }
 
-fn handle_post_message(connection : &mut Connection, data : HttpRequestContent) {
-    println!("    POST {}\n    Body: {}", data.location, data.body);
+    fn handle_post_message(&mut self, connection : &mut Connection, data : HttpRequestContent) {
+        println!("    POST {}\n    Body: {}", data.location, data.body);
 
-    let response = HttpFormatter::ok();
-    connection.write_data(&response);
+        self.messages.push(data.body);
+
+        let response = HttpFormatter::ok();
+        connection.write_data(&response);
+    }
 }
 
 struct Connection {
