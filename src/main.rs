@@ -7,6 +7,7 @@ use std::net::TcpStream;
 use http::HttpFormatter;
 use http::HttpParser;
 use http::HttpRequest;
+use http::HttpRequestContent;
 
 
 fn main() {
@@ -33,26 +34,31 @@ fn handle_connection(stream : TcpStream) {
         Err(msg) => {
             println!("  ! Error: {}", msg);
         },
-        Ok(HttpRequest::GET(data)) => {
-            println!("    GET {}\n    Body: {}", data.location, data.body);
-            let response = HttpFormatter::ok("GET ACCEPTED");
-            connection.write_data(&response);
-        },
-        Ok(HttpRequest::POST(data)) => {
-            println!("    POST {}\n    Body: {}", data.location, data.body);
-            let response = HttpFormatter::ok("POST ACCEPTED");
-            connection.write_data(&response);
-        },
+        Ok(HttpRequest::GET(data)) => handle_get_messages(&mut connection, data),
+        Ok(HttpRequest::POST(data)) => handle_post_message(&mut connection, data),
     }
     println!("  > Connection closed.");
 }
 
-struct Connection{
+fn handle_get_messages(connection : &mut Connection, data : HttpRequestContent) {
+    println!("    GET {}\n    Body: {}", data.location, data.body);
+
+    let response = HttpFormatter::ok_with_body("Hello!");
+    connection.write_data(&response);
+}
+
+fn handle_post_message(connection : &mut Connection, data : HttpRequestContent) {
+    println!("    POST {}\n    Body: {}", data.location, data.body);
+
+    let response = HttpFormatter::ok();
+    connection.write_data(&response);
+}
+
+struct Connection {
     stream : TcpStream,
 }
 
-impl Connection{
-
+impl Connection {
     fn new(stream : TcpStream) -> Connection {
         Connection{
             stream

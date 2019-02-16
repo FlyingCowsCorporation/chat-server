@@ -4,13 +4,17 @@ use regex::RegexBuilder;
 pub struct HttpFormatter { }
 
 impl HttpFormatter {
-    pub fn ok(body : &str) -> String {
+    pub fn ok_with_body(body : &str) -> String {
         let mut headers = HttpFormatter::format_headers("200 OK");
         headers.push_str(body);
         headers
     }
 
-    pub fn format_headers(status : &str) -> String{
+    pub fn ok() -> String {
+        HttpFormatter::format_headers("200 OK")
+    }
+
+    fn format_headers(status : &str) -> String{
         let mut headers = String::from("HTTP/1.1 ");
         headers.push_str(status);
         headers.push_str("\r\n\r\n");
