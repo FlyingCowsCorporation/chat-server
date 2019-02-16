@@ -4,6 +4,7 @@ use std::net::TcpStream;
 use std::result::Result;
 use regex::Regex;
 use regex::Captures;
+use regex::RegexBuilder;
 
 fn main() {
     let listener = TcpListener::bind("0.0.0.0:15000").unwrap();
@@ -35,7 +36,7 @@ fn handle_connection(stream : TcpStream) {
             connection.write_data(&response);
         },
         Ok(HttpRequest::POST(data)) => {
-            println!("POST {}: \n{}\n{}", data.location, data.headers, data.body);
+            println!("  {}: \n{}\n{}", data.location, data.headers, data.body);
             let response = HttpFormatter::ok("POST ACCEPTED");
             connection.write_data(&response);
         },
@@ -59,10 +60,12 @@ struct HttpParser {}
 impl HttpParser {
     fn parse(request_str : &str) -> Result<HttpRequest, &'static str> {
 
-        let re = Regex::new(r"([^\s]+) ([^\s]+) HTTP/.\..\r\n(.*)\r\n\r\n(.*)").unwrap();
-
+        let re = RegexBuilder::new(r"([^\s]+) ([^\s]+) HTTP/.\..\r\n(.*)\r\n\r\n(.*)")
+            .dot_matches_new_line(true)
+            .build().unwrap();
+        
         match re.captures(request_str) {
-            Some(captures) => Ok(match_to_request(captures)),
+            Some(captures) => HttpParser::match_to_request(captures),
             None => {
                 Err("Invalid request.")
             }
