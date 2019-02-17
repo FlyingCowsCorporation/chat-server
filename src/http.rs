@@ -52,6 +52,8 @@ impl HttpParser {
                             if actual_length == content_length {
                                 Ok(HttpRequest::POST(content))
                             } else {
+                                //println!("CRDATA: \"{}\"", content.body);
+                                println!("  > We have {} bytes, but we need {}", actual_length, content_length);
                                 let additional_content = connection.read_more(content_length - actual_length);
                                 match additional_content {
                                     Ok(content) => {
@@ -85,7 +87,7 @@ impl HttpParser {
 
     fn parse_str(request_str : &str) -> Result<HttpRequest, &'static str> {
 
-        let re = RegexBuilder::new(r"([^\s]+) ([^\s]+) HTTP/.\..\r\n(.*)\r\n\r\n(.*)")
+        let re = RegexBuilder::new(r"([^\s]+) ([^\s]+) HTTP/.\..\r\n(.*?)\r\n\r\n(.*)")
             .dot_matches_new_line(true)
             .build().unwrap();
 
