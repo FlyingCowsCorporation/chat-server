@@ -133,14 +133,27 @@ impl Connection {
                 let mut data = String::from_utf8_lossy(&buffer[..read]).to_string();
                 //println!("DATA: \"{}\"", data);
                 if read == BUF_SIZE {
-                    println!("  > Buffer is full, there is more data.");
-                    match self.read_string() {
-                        Ok(next_data) => {
-                            data.push_str(&next_data);
-                            Ok(data)
-                        },
+                    let mut buf = [0; 10];
+                    match self.stream.peek(&mut buf) {
+                        Ok(read) => {
+                            if read > 0 {
+                                println!("  > Buffer is full, there is more data.");
+                                match self.read_string() {
+                                    Ok(next_data) => {
+                                        data.push_str(&next_data);
+                                        Ok(data)
+                                    },
+                                    Err(e) => Err(e),
+                                }
+                            } else {
+                                println!("  > Buffer was filled perfectly, no more data.");
+                                Ok(data)
+                            }
+                        }
                         Err(e) => Err(e),
                     }
+
+                   
                 } else {
                     Ok(data)
                 }
