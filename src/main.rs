@@ -116,6 +116,7 @@ impl Connection {
                     println!("    Done. Read {} more bytes (needed {}).", data.len(), num_bytes);
                     Ok(data)
                 } else {
+                    println!("    Not yet done. Read {} more bytes (needed {}).", data.len(), num_bytes);
                     self.read_more(num_bytes - data.len())
                 }
             },
