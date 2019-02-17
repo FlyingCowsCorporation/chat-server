@@ -165,7 +165,13 @@ impl Connection {
         self.stream.set_nonblocking(true)?;
 
         let mut buf = [0; 1];
-        let read = self.stream.peek(&mut buf)?;
+        let read = match self.stream.peek(&mut buf) {
+            Ok(read) => read,
+            Err(err) => {
+                println!("Peek error: {}", err);
+                0
+            }
+        };
 
         self.stream.set_nonblocking(false)?;
         Ok(read != 0)
