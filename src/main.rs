@@ -131,6 +131,7 @@ impl Connection {
         match self.stream.read(&mut buffer) {
             Ok(read) => {
                 let mut data = String::from_utf8_lossy(&buffer[..read]).to_string();
+                println!("DATA: \"{}\"", data);
                 if read == BUF_SIZE {
                     println!("  > Buffer is full, there is more data.");
                     match self.read_string() {
