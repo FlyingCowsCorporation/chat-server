@@ -81,7 +81,7 @@ impl HttpParser {
     fn read_until_end(connection : &mut Connection) -> Result<String, &'static str> {
         match connection.read_string() {
             Ok(data) => Ok(data),
-            Err(err) => Err("Connection reset by peer."),
+            Err(_) => Err("Connection reset by peer."),
         }
     }
 

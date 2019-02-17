@@ -133,10 +133,9 @@ impl Connection {
                 let mut data = String::from_utf8_lossy(&buffer[..read]).to_string();
                 //println!("DATA: \"{}\"", data);
                 if read == BUF_SIZE {
-                    let mut buf = [0; 10];
-                    match self.stream.peek(&mut buf) {
-                        Ok(read) => {
-                            if read > 0 {
+                    match self.has_data_available() {
+                        Ok(available) => {
+                            if available {
                                 println!("  > Buffer is full, there is more data.");
                                 match self.read_string() {
                                     Ok(next_data) => {
@@ -160,6 +159,16 @@ impl Connection {
             },
             Err(e) => Err(e)
         }
+    }
+
+    fn has_data_available(&self) -> Result<bool, io::Error> {
+        self.stream.set_nonblocking(true)?;
+
+        let mut buf = [0; 1];
+        let read = self.stream.peek(&mut buf)?;
+
+        self.stream.set_nonblocking(false)?;
+        Ok(read != 0)
     }
 
     fn write_data(&mut self, data : &str) {
