@@ -57,7 +57,10 @@ impl ChatServer {
             return;
         }
 
-        let request = HttpParser::parse(&request_str.unwrap());
+        let request_str = request_str.unwrap();
+        println!("Received request: \"{}\"", request_str);
+
+        let request = HttpParser::parse(&request_str);
 
         match request {
             Err(msg) => {
