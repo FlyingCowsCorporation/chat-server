@@ -6,6 +6,7 @@ use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::net::Shutdown;
+use std::net::SocketAddr;
 
 use http::HttpFormatter;
 use http::HttpParser;
@@ -77,6 +78,7 @@ impl ChatServer {
         let mut conn_res = self.waiting_connections.pop();
         while conn_res.is_some() {
             let mut conn = conn_res.unwrap();
+            println!("  > Forwarding message to {}", conn.peer_addr());
             conn.write_data(&response);
             conn_res = self.waiting_connections.pop();
         }
@@ -145,7 +147,7 @@ impl Connection {
 
     fn write_data(&mut self, data : &str) {
         match self.stream.write(data.as_bytes()) {
-            Ok(bytecount) => println!("--> Wrote {} bytes to {}", bytecount, self.stream.peer_addr().unwrap()),
+            Ok(_) => {},
             Err(_) => {
                 println!("--> Write failed: connection closed.");
                 return;
@@ -155,6 +157,10 @@ impl Connection {
             Ok(_) => {},
             Err(_) => println!("--> Flush failed: connection closed."), 
         }
+    }
+
+    fn peer_addr(&self) -> SocketAddr {
+         self.stream.peer_addr().unwrap()
     }
 
     fn shutdown(&mut self) -> Result<(), io::Error>{
