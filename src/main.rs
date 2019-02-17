@@ -162,19 +162,27 @@ impl Connection {
     }
 
     fn has_data_available(&self) -> Result<bool, io::Error> {
+
+        // Set stream to nonblocking to ensure we won't block
+        // while checking if there is data available.
         self.stream.set_nonblocking(true)?;
 
-        let mut buf = [0; 1];
-        let read = match self.stream.peek(&mut buf) {
-            Ok(read) => read,
-            Err(err) => {
-                println!("Peek error: {}", err);
-                0
-            }
-        };
-
+        let peek_result = self.stream.peek(&mut [0; 1]);
+        
+        // Return to a blocking state.
         self.stream.set_nonblocking(false)?;
-        Ok(read != 0)
+
+        Ok(0 != match peek_result {
+            Ok(read) => read,
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                // Peek would block, so we can assume there
+                // is currently no data available on the stream.
+                0
+            },
+            Err(err) => {
+                return Err(err);
+            }
+        })
     }
 
     fn write_data(&mut self, data : &str) {
