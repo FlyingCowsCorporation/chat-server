@@ -5,6 +5,7 @@ use std::io::prelude::*;
 
 use std::net::TcpListener;
 use std::net::TcpStream;
+use std::net::Shutdown;
 
 use http::HttpFormatter;
 use http::HttpParser;
@@ -48,26 +49,19 @@ impl ChatServer {
     fn handle_connection(&mut self, stream : TcpStream) {
 
         let mut connection = Connection::new(stream);
-
-
-        let request_str = connection.read_data();
-        
-        if !request_str.is_ok() {
-            println!("--> Connection reset by peer.");
-            return;
-        }
-
-        let request_str = request_str.unwrap();
-        println!("Received request: \"{}\"", request_str);
-
-        let request = HttpParser::parse(&request_str);
-
+        let request = HttpParser::parse(&mut connection);
         match request {
             Err(msg) => {
                 println!("  ! Error: {}", msg);
+                match connection.shutdown() {
+                    Ok(()) => {},
+                    Err(_) => println!("  ! Additionally, could not shutdown socket."),
+                };
             },
             Ok(HttpRequest::GET(data)) => self.handle_get_messages(connection, data),
-            Ok(HttpRequest::POST(data)) => self.handle_post_message(&mut connection, data),
+            Ok(HttpRequest::POST(data)) => {
+                self.handle_post_message(&mut connection, data);
+            }
         }
     }
 
@@ -99,9 +93,11 @@ impl ChatServer {
     }
 }
 
-struct Connection {
+pub struct Connection {
     stream : TcpStream,
 }
+
+const BUF_SIZE : usize = 512;
 
 impl Connection {
     fn new(stream : TcpStream) -> Connection {
@@ -110,15 +106,38 @@ impl Connection {
         }
     }
 
-    fn read_data(&mut self) -> Result<String, io::Error> {
-        let mut buffer = [0; 512];
+    fn read_more(&mut self, num_bytes : usize) -> Result<String, io::Error> {
+        match self.read_string() {
+            Ok(data) => {
+                if data.len() >= num_bytes {
+                    Ok(data)
+                } else {
+                    self.read_more(num_bytes - data.len())
+                }
+            },
+            Err(err) => Err(err),
+        }
+    }
+
+    fn read_string(&mut self) -> Result<String, io::Error> {
+
+        let mut buffer = [0; BUF_SIZE];
 
         match self.stream.read(&mut buffer) {
             Ok(read) => {
-                let data = String::from_utf8_lossy(&buffer[..(read + 20)]);
-                let next_byte = &buffer[read+10];
-                println!("Byte value: {}", next_byte);
-                Ok(data.to_string())
+                let mut data = String::from_utf8_lossy(&buffer[..read]).to_string();
+                if read == BUF_SIZE {
+                    println!("  > Buffer is full, there is more data.");
+                    match self.read_string() {
+                        Ok(next_data) => {
+                            data.push_str(&next_data);
+                            Ok(data)
+                        },
+                        Err(e) => Err(e),
+                    }
+                } else {
+                    Ok(data)
+                }
             },
             Err(e) => Err(e)
         }
@@ -136,5 +155,9 @@ impl Connection {
             Ok(_) => {},
             Err(_) => println!("--> Flush failed: connection closed."), 
         }
+    }
+
+    fn shutdown(&mut self) -> Result<(), io::Error>{
+        self.stream.shutdown(Shutdown::Both)
     }
 }
