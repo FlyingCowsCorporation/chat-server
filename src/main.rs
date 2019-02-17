@@ -116,6 +116,8 @@ impl Connection {
         match self.stream.read(&mut buffer) {
             Ok(read) => {
                 let data = String::from_utf8_lossy(&buffer[..(read + 20)]);
+                let next_byte = &buffer[read+10];
+                println!("Byte value: {}", next_byte);
                 Ok(data.to_string())
             },
             Err(e) => Err(e)
