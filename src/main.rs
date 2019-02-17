@@ -113,6 +113,7 @@ impl Connection {
         match self.read_string() {
             Ok(data) => {
                 if data.len() >= num_bytes {
+                    println!("    Done. Read {} more bytes (needed {}).", data.len(), num_bytes);
                     Ok(data)
                 } else {
                     self.read_more(num_bytes - data.len())
