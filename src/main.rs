@@ -145,7 +145,7 @@ impl Connection {
 
     fn write_data(&mut self, data : &str) {
         match self.stream.write(data.as_bytes()) {
-            Ok(bytecount) => println!("--> Wrote {} bytes.", bytecount),
+            Ok(bytecount) => println!("--> Wrote {} bytes to {}", bytecount, self.stream.peer_addr().unwrap()),
             Err(_) => {
                 println!("--> Write failed: connection closed.");
                 return;
