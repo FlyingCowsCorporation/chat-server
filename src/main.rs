@@ -109,6 +109,7 @@ impl Connection {
     }
 
     fn read_more(&mut self, num_bytes : usize) -> Result<String, io::Error> {
+        println!("    Reading an additional {} bytes...", num_bytes);
         match self.read_string() {
             Ok(data) => {
                 if data.len() >= num_bytes {

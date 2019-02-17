@@ -52,7 +52,6 @@ impl HttpParser {
                             if actual_length == content_length {
                                 Ok(HttpRequest::POST(content))
                             } else {
-                                println!("    Got {} bytes, but we need {}, reading more...", actual_length, content_length);
                                 let additional_content = connection.read_more(content_length - actual_length);
                                 match additional_content {
                                     Ok(content) => {
